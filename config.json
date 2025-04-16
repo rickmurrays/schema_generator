@@ -1,0 +1,21 @@
+{
+  "database": {
+    "type": "sqlserver",
+    "server": "your_sql_server",
+    "database": "your_database",
+    "username": "your_username",
+    "password": "your_password",
+    "schemas": ["dbo"],
+    "tables": ["dbo.employees", "dbo.departments"],
+    "column_aliases": {
+      "dbo.employees": {
+        "emp_id": "employee_id",
+        "emp_name": "full_name"
+      },
+      "dbo.departments": {
+        "dept_id": "department_id"
+      }
+    }
+  },
+  "output_dir": "./table_schemas"
+}
