@@ -28,14 +28,14 @@ project_directory/
 
 ## Component Details
 
-### 1. `schema_generator.py`
+#### `schema_generator.py`
 - **Purpose**: Entry point that orchestrates the schema generation process.
 - **Components**:
   - `main`: Loads configuration, creates database connection and schema generator, and triggers schema generation.
   - Command-line argument parsing for `config.json` and `config_schema.json` paths.
 - **Dependencies**: Imports `ConfigLoader`, `DatabaseConnectionFactory`, `SchemaGeneratorFactory`.
 
-### 2. `config_loader.py`
+#### `config_loader.py`
 - **Purpose**: Loads and validates the JSON configuration file against `config_schema.json`.
 - **Components**:
   - `ConfigLoader`:
@@ -43,7 +43,7 @@ project_directory/
     - `load_config`: Loads and validates the configuration file using `jsonschema`.
 - **Dependencies**: `json`, `jsonschema`.
 
-### 3. `database_connection.py`
+#### `database_connection.py`
 - **Purpose**: Manages database connections for SQL Server, Oracle, and Teradata.
 - **Components**:
   - `DatabaseConnection` (abstract base class): Defines interface for JDBC URL, connection properties, Spark session, and cleanup.
@@ -53,7 +53,7 @@ project_directory/
   - `DatabaseConnectionFactory`: Creates appropriate connection based on database type.
 - **Dependencies**: `pyspark.sql.SparkSession`, `abc`.
 
-### 4. `schema_generator_db.py`
+#### `schema_generator_db.py`
 - **Purpose**: Generates table schemas from the database.
 - **Components**:
   - `DatabaseSchemaGenerator` (abstract base class): Defines methods for retrieving table names, applying aliases, and generating schemas.
@@ -63,7 +63,7 @@ project_directory/
   - `SchemaGeneratorFactory`: Creates appropriate schema generator based on database type.
 - **Dependencies**: `typing`, `pyspark.sql.types`, `abc`, `database_connection.DatabaseConnection`, `schema_output_handler.SchemaOutputHandler`.
 
-### 5. `schema_output_handler.py`
+#### `schema_output_handler.py`
 - **Purpose**: Converts Spark schemas to simplified JSON and writes them to files.
 - **Components**:
   - `SchemaOutputHandler`:
@@ -72,7 +72,7 @@ project_directory/
     - `write_schema_to_file`: Writes JSON schema to a file in the output directory.
 - **Dependencies**: `json`, `os`, `pyspark.sql.types`.
 
-### 6. `config_schema.json`
+#### `config_schema.json`
 - **Purpose**: Defines the validation rules for `config.json`.
 - **Structure**:
   - Requires a single `database` object and `output_dir`.
@@ -80,7 +80,7 @@ project_directory/
   - Enforces database-specific requirements (e.g., `port` for Oracle).
   - Validates formats (e.g., `tables` as `schema.table`).
 
-### 7. `config.json`
+#### `config.json`
 - **Purpose**: User-defined configuration specifying the database and schema generation settings.
 - **Example**:
   ```json
@@ -122,21 +122,19 @@ project_directory/
 
 ## Build Instructions
 
-**Clone the Repository** (if applicable):
+#### Clone the Repository:
 ```bash
 git clone <repository_url>
 cd project_directory
 ```
 
-**Install Dependencies**:
-
+#### Install Dependencies:
 Install the required Python packages:
 ```bash
 pip install pyspark jsonschema
 ```
 
-**Prepare JDBC Drivers**:
-
+#### Prepare JDBC Drivers:
 The tool uses `spark.jars.packages` to download drivers automatically for SQL Server and Teradata.
 
 For Oracle, download `ojdbc8.jar` from Oracle's website and include it manually if needed:
@@ -150,205 +148,97 @@ export SPARK_CLASSPATH=/path/to/mssql-jdbc.jar:/path/to/ojdbc8.jar:/path/to/tera
 ```
 
 #### Set Up Configuration Files:
-
-Create config_schema.json in the project directory with the content provided above.
-Create config.json with your database details (see example above).
+Create `config_schema.json` in the project directory with the content provided above.  
+Create `config.json` with your database details (see example above).
 
 ## Run Instructions
 
-Verify File Structure:
+#### Verify File Structure:
 Ensure the following files are in the project directory:
-schema_generator.py
 
-config_loader.py
+`schema_generator.py`  
+`config_loader.py`  
+`database_connection.py`  
+`schema_generator_db.py`  
+`schema_output_handler.py`  
+`config_schema.json`  
+`config.json`
 
-database_connection.py
-
-schema_generator_db.py
-
-schema_output_handler.py
-
-config_schema.json
-
-config.json
-
-Run the Script:
+#### Run the Script:
 Execute schema_generator.py with default file paths:
-bash
-
+```bash
 python schema_generator.py
+```
 
 Or specify custom paths:
-bash
-
+```bash
 python schema_generator.py --config my_config.json --schema my_schema.json
+```
 
-Expected Output:
-The script validates config.json against config_schema.json.
+**Expected Output:**
 
-Connects to the specified database.
-
-Generates schemas for the specified tables or schemas.
-
-Applies column aliases if provided.
-
-Writes JSON schema files to output_dir (e.g., ./schemas/dbo_employees_schema.json).
-
+The script validates `config.json` against `config_schema.json`.  
+Connects to the specified database.  
+Generates schemas for the specified tables or schemas.  
+Applies column aliases if provided.  
+Writes JSON schema files to `output_dir` (e.g., ./schemas/dbo_employees_schema.json).  
 Prints progress and any errors:
-
+```
 Processing database: sqlserver
 Schema for table dbo.employees written to ./schemas/dbo_employees_schema.json
 Schema for table dbo.departments written to ./schemas/dbo_departments_schema.json
+```
 
-## Validation Examples
-The ConfigLoader validates config.json against config_schema.json. Below are common errors:
-Missing database:
-json
-
-{
-  "output_dir": "./schemas"
-}
-
-Error: ValueError: Configuration validation failed: 'database' is a required property
-
-Invalid output_dir:
-json
-
-{
-  "database": {
-    "type": "sqlserver",
-    "server": "localhost",
-    "database": "my_db",
-    "username": "sa",
-    "password": "password123"
-  },
-  "output_dir": ""
-}
-
-Error: ValueError: Configuration validation failed: '' does not match '.*\\S.*'
-
-Missing type:
-json
-
-{
-  "database": {
-    "server": "localhost",
-    "database": "my_db",
-    "username": "sa",
-    "password": "password123"
-  },
-  "output_dir": "./schemas"
-}
-
-Error: ValueError: Configuration validation failed: 'type' is a required property
-
-Invalid type:
-json
-
-{
-  "database": {
-    "type": "mysql",
-    "server": "localhost",
-    "database": "my_db",
-    "username": "sa",
-    "password": "password123"
-  },
-  "output_dir": "./schemas"
-}
-
-Error: ValueError: Configuration validation failed: 'mysql' is not one of ['sqlserver', 'oracle', 'teradata']
-
-Missing required parameter:
-json
-
-{
-  "database": {
-    "type": "sqlserver",
-    "server": "localhost",
-    "username": "sa",
-    "password": "password123"
-  },
-  "output_dir": "./schemas"
-}
-
-Error: ValueError: Configuration validation failed: 'database' is a required property
-
-Invalid tables format:
-json
-
-{
-  "database": {
-    "type": "sqlserver",
-    "server": "localhost",
-    "database": "my_db",
-    "username": "sa",
-    "password": "password123",
-    "tables": ["dbo.employees", "employees"]
-  },
-  "output_dir": "./schemas"
-}
-
-Error: ValueError: Configuration validation failed: 'employees' does not match '^[a-zA-Z0-9_]+\\.[a-zA-Z0-9_]+$'
-
-Invalid schema file:
-If config_schema.json is missing or malformed:
-Error: ValueError: Failed to read or parse schema file config_schema.json: ...
 
 ## Notes
-Modularity:
-The codebase is split into five Python files, each handling a specific responsibility: configuration, connections, schema generation, output handling, and orchestration.
 
+#### Modularity:
+The codebase is split into five Python files, each handling a specific responsibility: configuration, connections, schema generation, output handling, and orchestration.  
 This improves maintainability and scalability.
 
-JSON Schema Validation:
-Uses jsonschema for robust validation with clear error messages.
-
+#### JSON Schema Validation:
+Uses jsonschema for robust validation with clear error messages.  
 Enforces a single database, correct type, required parameters, and valid formats.
 
-Simplified Output:
+#### Simplified Output:
 Excludes metadata (e.g., precision, scale, length), including only name, type, and nullable for columns.
 
-Security:
+#### Security:
 Store sensitive information (e.g., passwords) securely, such as in environment variables or a secrets manager, for production use.
 
-Extensibility:
+#### Extensibility:
 To support new databases:
-Update config_schema.json with new type and requirements.
+- Update `config_schema.json` with new type and requirements.
+- Add a new connection class in `database_connection.py`.
+- Add a new schema generator class in `schema_generator_db.py`.
 
-Add a new connection class in database_connection.py.
-
-Add a new schema generator class in schema_generator_db.py.
-
-JDBC Drivers:
-Ensure driver compatibility with your database versions.
-
+#### JDBC Drivers:
+Ensure driver compatibility with your database versions.  
 For offline environments, include JARs manually in the Spark configuration.
 
-Oracle:
+#### Oracle:
 If using SID instead of service name, modify the JDBC URL in OracleConnection:
-python
-
+```python
 return f"jdbc:oracle:thin:@//{self.server}:{self.port}:{self.service_name}"
+```
 
-Teradata:
-Ensure the user has access to DBC.TablesV for table name queries.
+#### Teradata:
+Ensure the user has access to `DBC.TablesV` for table name queries.
 
 ## Troubleshooting
-Connection Errors:
-Verify database credentials and network accessibility.
 
+#### Connection Errors:
+Verify database credentials and network accessibility.  
 Ensure JDBC drivers are available and compatible.
 
-Validation Errors:
-Check config.json against config_schema.json requirements.
+#### Validation Errors:
+Check `config.json` against `config_schema.json` requirements.  
+Ensure tables are in `schema.table` format.
 
-Ensure tables are in schema.table format.
+#### Spark Errors:
+Confirm pyspark is installed and configured.  
+Check `SPARK_CLASSPATH` for manual JAR inclusion.
 
-Spark Errors:
-Confirm pyspark is installed and configured.
-
-Check SPARK_CLASSPATH for manual JAR inclusion.
-
-File Not Found:
-Ensure config.json and config_schema.json are in the project directory or specify correct paths.
+#### File Not Found:
+Ensure `config.json` and `config_schema.json` are in the project directory or specify correct paths.
 
